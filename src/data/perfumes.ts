@@ -1,5 +1,11 @@
 import { Perfume } from '../types';
 
+// Direct Vite asset imports - guaranteed to bundle and resolve in production builds on Netlify, Vercel, etc.
+import santalImg from '../assets/images/perfume_santal_flacon_1793542815843.jpg';
+import noirImg from '../assets/images/perfume_noir_cypress_1793542817046.jpg';
+import roseImg from '../assets/images/perfume_rose_extrait_1793542817957.jpg';
+import vanilleImg from '../assets/images/perfume_vanille_smoke_1793542817103.jpg';
+
 export const PERFUME_CATALOG: Perfume[] = [
   {
     id: 'ambre-epice',
@@ -13,7 +19,7 @@ export const PERFUME_CATALOG: Perfume[] = [
     price: 18500,
     formattedPrice: '18 500',
     currency: 'руб.',
-    image: '/src/assets/images/perfume_santal_flacon_1793542815843.jpg',
+    image: santalImg,
     ratingStars: 5,
     description: 'Мягкий и медитативный аромат золотистого янтаря, окутанного кардамоном и благородной древесиной майсурского сандала. Звучит интимно и согревающе, оставляя за собой бархатный шлейф дорогой замши и смолистого бензоина.',
     pyramid: {
@@ -37,7 +43,7 @@ export const PERFUME_CATALOG: Perfume[] = [
     price: 21900,
     formattedPrice: '21 900',
     currency: 'руб.',
-    image: '/src/assets/images/perfume_noir_cypress_1793542817046.jpg',
+    image: noirImg,
     ratingStars: 5,
     description: 'Дымная сага о древних лесах и угасающем костре в осенних сумерках. Сухой дымный ветивер переплетается с драгоценным персидским шафраном и тлеющей древесиной кедра, создавая бескомпромиссный образ внутренней силы.',
     pyramid: {
@@ -61,7 +67,7 @@ export const PERFUME_CATALOG: Perfume[] = [
     price: 16400,
     formattedPrice: '16 400',
     currency: 'руб.',
-    image: '/src/assets/images/perfume_rose_extrait_1793542817957.jpg',
+    image: roseImg,
     ratingStars: 5,
     description: 'Полдень в саду Сен-Поль-де-Ванс. Утренняя роса на лепестках майской розы, озаренная мягким средиземноморским солнцем. Воздушный, чистый и невероятно женственный аромат с деликатной пудровой текстурой.',
     pyramid: {
@@ -84,7 +90,7 @@ export const PERFUME_CATALOG: Perfume[] = [
     price: 24800,
     formattedPrice: '24 800',
     currency: 'руб.',
-    image: '/src/assets/images/perfume_vanille_smoke_1793542817103.jpg',
+    image: vanilleImg,
     ratingStars: 5,
     description: 'Высококонцентрированный экстракт редких природных эссенций. Минеральная солоноватость морского бриза встречается с тягучей несладкой стручковой ванилью и заземляющим гаитянским ветивером. Истинное воплощение тихой роскоши.',
     pyramid: {
@@ -108,7 +114,7 @@ export const PERFUME_CATALOG: Perfume[] = [
     price: 12900,
     formattedPrice: '12 900',
     currency: 'руб.',
-    image: '/src/assets/images/perfume_santal_flacon_1793542815843.jpg',
+    image: santalImg,
     ratingStars: 5,
     description: 'Утонченная версия нашего флагманского пряно-амбрового парфюма в лаконичном флаконе для ручной клади и вечерних выходов. Та же глубина композиции и безупречный шлейф.',
     pyramid: {
@@ -131,7 +137,7 @@ export const PERFUME_CATALOG: Perfume[] = [
     price: 27500,
     formattedPrice: '27 500',
     currency: 'руб.',
-    image: '/src/assets/images/perfume_noir_cypress_1793542817046.jpg',
+    image: noirImg,
     ratingStars: 5,
     description: 'Лимитированный выпуск чистейшего экстракта. Более глубокое раскрытие нот кожи и дыма с добавлением драгоценного уда из Камбоджи. Штучный коллекционный экземпляр ручной сборки.',
     pyramid: {
@@ -154,7 +160,7 @@ export const PERFUME_CATALOG: Perfume[] = [
     price: 23200,
     formattedPrice: '23 200',
     currency: 'руб.',
-    image: '/src/assets/images/perfume_rose_extrait_1793542817957.jpg',
+    image: roseImg,
     ratingStars: 5,
     description: 'Парадный флакон увеличенного объема с максимальной концентрацией эссенции майской розы и белого нектарина. Сбалансированный и чистый цветочный гимн без единой приторной ноты.',
     pyramid: {
@@ -177,7 +183,7 @@ export const PERFUME_CATALOG: Perfume[] = [
     price: 15900,
     formattedPrice: '15 900',
     currency: 'руб.',
-    image: '/src/assets/images/perfume_vanille_smoke_1793542817103.jpg',
+    image: vanilleImg,
     ratingStars: 5,
     description: 'Аромат морского побережья северной Атлантики. Прохладный ветер, запах соли на гранитных скалах, терпкий дикий шалфей и мокрая древесина кедра, выброшенная прибоем.',
     pyramid: {

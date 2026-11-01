@@ -52,6 +52,23 @@ export const ProductCard: React.FC<ProductCardProps> = ({
           alt={`${perfume.brand} — ${perfume.name}`}
           loading="lazy"
           referrerPolicy="no-referrer"
+          onError={(e) => {
+            const target = e.currentTarget;
+            if (!target.dataset.fallback) {
+              target.dataset.fallback = 'true';
+              const nameMap: Record<string, string> = {
+                'ambre-epice': 'santal_ambre.jpg',
+                'ambre-epice-50': 'santal_ambre.jpg',
+                'echoes-of-flame': 'noir_cypress.jpg',
+                'echoes-of-flame-extrait': 'noir_cypress.jpg',
+                'reverie-du-midi': 'rose_reverie.jpg',
+                'reverie-du-midi-extrait': 'rose_reverie.jpg',
+                'aura-absolue': 'vanille_aura.jpg',
+                'aura-absolue-discovery': 'vanille_aura.jpg'
+              };
+              target.src = `/images/perfumes/${nameMap[perfume.id] || 'santal_ambre.jpg'}`;
+            }
+          }}
           className="w-full h-full object-cover object-center transition-transform duration-500 ease-out group-hover:scale-[1.03]"
         />
 

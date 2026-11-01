@@ -69,6 +69,24 @@ export const QuickViewModal: React.FC<QuickViewModalProps> = ({
           <img
             src={perfume.image}
             alt={`${perfume.brand} — ${perfume.name}`}
+            referrerPolicy="no-referrer"
+            onError={(e) => {
+              const target = e.currentTarget;
+              if (!target.dataset.fallback) {
+                target.dataset.fallback = 'true';
+                const nameMap: Record<string, string> = {
+                  'ambre-epice': 'santal_ambre.jpg',
+                  'ambre-epice-50': 'santal_ambre.jpg',
+                  'echoes-of-flame': 'noir_cypress.jpg',
+                  'echoes-of-flame-extrait': 'noir_cypress.jpg',
+                  'reverie-du-midi': 'rose_reverie.jpg',
+                  'reverie-du-midi-extrait': 'rose_reverie.jpg',
+                  'aura-absolue': 'vanille_aura.jpg',
+                  'aura-absolue-discovery': 'vanille_aura.jpg'
+                };
+                target.src = `/images/perfumes/${nameMap[perfume.id] || 'santal_ambre.jpg'}`;
+              }
+            }}
             className="w-full h-auto max-h-[460px] object-contain drop-shadow-md select-none transition-transform duration-500 hover:scale-[1.02]"
           />
           {perfume.isBestseller && (
