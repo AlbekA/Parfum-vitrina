@@ -1,0 +1,6 @@
+{
+  "name": "ПАРФЮМЕР — Бутик нишевой парфюмерии",
+  "description": "Премиальный бутик нишевой парфюмерии в эстетике Quiet Luxury. Каталог селективных ароматов с пирамидами нот и быстрым заказом в WhatsApp.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
