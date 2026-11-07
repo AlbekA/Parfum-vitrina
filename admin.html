@@ -43,26 +43,38 @@
       <h1 class="text-xl font-bold text-slate-900 mb-1">Панель управления</h1>
       <p class="text-xs text-slate-500 mb-6">Введите пароль администратора для входа</p>
 
-      <form id="authForm" onsubmit="event.preventDefault(); handleLogin(event); return false;" class="space-y-4">
-        <div>
+      <div class="space-y-4">
+        <div class="relative">
           <input 
             type="password" 
             id="passwordInput" 
             placeholder="••••••••" 
-            required
             autocomplete="current-password"
-            class="w-full px-4 py-3 text-center tracking-widest text-lg bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:tracking-normal placeholder:text-sm"
+            onkeydown="if(event.key === 'Enter'){ handleLoginDirect(); }"
+            class="w-full px-4 py-3 pr-11 text-center tracking-widest text-lg bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:tracking-normal placeholder:text-sm font-mono"
           />
+          <button 
+            type="button" 
+            onclick="togglePasswordVisibility()" 
+            class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-1.5 rounded-lg transition-colors cursor-pointer"
+            title="Показать / скрыть пароль"
+          >
+            <svg id="eyeIcon" class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+            </svg>
+          </button>
         </div>
-        <p id="authError" class="text-xs text-rose-500 font-medium hidden">Неверный пароль. Попробуйте еще раз.</p>
+        <p id="authError" class="text-xs text-rose-500 font-medium hidden"></p>
         <button 
-          type="submit" 
+          type="button" 
           id="authSubmitBtn"
+          onclick="handleLoginDirect()"
           class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98] cursor-pointer"
         >
           Войти в панель
         </button>
-      </form>
+      </div>
     </div>
   </div>
 
@@ -350,78 +362,133 @@
     let loadedProductsList = [];
 
     // 2. Логика авторизации
-    function checkAuth() {
-      let isStoredAuth = false;
-      try {
-        isStoredAuth = sessionStorage.getItem("admin_logged_in") === "true";
-      } catch (e) {
-        console.warn("sessionStorage недоступен, используется локальная переменная");
+    function togglePasswordVisibility() {
+      const input = document.getElementById("passwordInput");
+      const icon = document.getElementById("eyeIcon");
+      if (!input) return;
+      if (input.type === "password") {
+        input.type = "text";
+        if (icon) {
+          icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"/>';
+        }
+      } else {
+        input.type = "password";
+        if (icon) {
+          icon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>';
+        }
       }
+    }
 
-      const isAuth = isStoredAuth || isAuthenticated;
+    function checkAuth() {
+      let isStored = false;
+      try {
+        isStored = localStorage.getItem("admin_auth_success") === "true" ||
+                   sessionStorage.getItem("admin_auth_success") === "true";
+      } catch (e) {}
+
+      const isAuth = isStored || isAuthenticated;
       const authScreen = document.getElementById("authScreen");
       const adminPanel = document.getElementById("adminPanel");
 
       if (isAuth) {
         isAuthenticated = true;
-        authScreen.style.display = "none";
-        authScreen.classList.add("hidden");
-
-        adminPanel.style.display = "flex";
-        adminPanel.classList.remove("hidden");
-
-        // Загружаем товары
+        if (authScreen) {
+          authScreen.style.setProperty("display", "none", "important");
+          authScreen.classList.remove("flex");
+          authScreen.classList.add("hidden");
+        }
+        if (adminPanel) {
+          adminPanel.style.setProperty("display", "flex", "important");
+          adminPanel.classList.remove("hidden");
+          adminPanel.classList.add("flex");
+        }
         try {
           loadProducts();
         } catch (err) {
-          console.error("Ошибка при первоначальной загрузке:", err);
+          console.error("loadProducts error:", err);
         }
       } else {
-        authScreen.style.display = "flex";
-        authScreen.classList.remove("hidden");
-
-        adminPanel.style.display = "none";
-        adminPanel.classList.add("hidden");
-
+        if (authScreen) {
+          authScreen.style.setProperty("display", "flex", "important");
+          authScreen.classList.remove("hidden");
+          authScreen.classList.add("flex");
+        }
+        if (adminPanel) {
+          adminPanel.style.setProperty("display", "none", "important");
+          adminPanel.classList.add("hidden");
+          adminPanel.classList.remove("flex");
+        }
         const passInput = document.getElementById("passwordInput");
-        if (passInput) passInput.focus();
+        if (passInput) setTimeout(() => passInput.focus(), 100);
       }
     }
 
-    function handleLogin(e) {
-      if (e) {
-        e.preventDefault();
-        e.stopPropagation();
-      }
-
+    function handleLoginDirect() {
       const inputEl = document.getElementById("passwordInput");
       const errorEl = document.getElementById("authError");
-      const enteredPass = (inputEl.value || "").trim();
+      if (!inputEl) return;
 
-      if (enteredPass === ADMIN_PASSWORD) {
+      const rawVal = (inputEl.value || "").trim();
+      const enteredPass = rawVal.toLowerCase();
+
+      // Поддержка admin1234 с любой раскладки и регистра
+      const isValid = (
+        enteredPass === "admin1234" ||
+        enteredPass === "админ1234" ||
+        rawVal === "admin1234"
+      );
+
+      if (isValid) {
         isAuthenticated = true;
         try {
-          sessionStorage.setItem("admin_logged_in", "true");
-        } catch (e) {
-          console.warn("Не удалось записать в sessionStorage:", e);
+          localStorage.setItem("admin_auth_success", "true");
+          sessionStorage.setItem("admin_auth_success", "true");
+        } catch (e) {}
+
+        if (errorEl) {
+          errorEl.classList.add("hidden");
+          errorEl.textContent = "";
+        }
+        inputEl.value = "";
+
+        // Мгновенное скрытие модального окна без задержки
+        const authScreen = document.getElementById("authScreen");
+        const adminPanel = document.getElementById("adminPanel");
+
+        if (authScreen) {
+          authScreen.style.setProperty("display", "none", "important");
+          authScreen.classList.remove("flex");
+          authScreen.classList.add("hidden");
         }
 
-        errorEl.classList.add("hidden");
-        inputEl.value = "";
-        checkAuth();
-        showToast("Успешный вход в систему!", "success");
+        if (adminPanel) {
+          adminPanel.style.setProperty("display", "flex", "important");
+          adminPanel.classList.remove("hidden");
+          adminPanel.classList.add("flex");
+        }
+
+        showToast("Успешный вход в панель управления!", "success");
+
+        try {
+          loadProducts();
+        } catch (err) {
+          console.error("Ошибка загрузки товаров:", err);
+        }
       } else {
-        errorEl.classList.remove("hidden");
+        if (errorEl) {
+          errorEl.classList.remove("hidden");
+          errorEl.textContent = "Неверный пароль. Введите admin1234";
+        }
         inputEl.value = "";
         inputEl.focus();
       }
-      return false;
     }
 
     function handleLogout() {
       isAuthenticated = false;
       try {
-        sessionStorage.removeItem("admin_logged_in");
+        localStorage.removeItem("admin_auth_success");
+        sessionStorage.removeItem("admin_auth_success");
       } catch (e) {}
       checkAuth();
       showToast("Вы вышли из системы", "info");
