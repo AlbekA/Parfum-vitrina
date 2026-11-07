@@ -15,6 +15,7 @@ import { PERFUME_CATALOG, createWhatsAppUrl } from './data/perfumes';
 import { Perfume, FragranceFamily, DialogHistoryItem } from './types';
 import { getStoredDialogs, saveDialogToHistory } from './utils/dialogHistory';
 import { Sparkles, ArrowDown, Search, Check, RefreshCw } from 'lucide-react';
+import heroBg from './assets/images/hero_luxury_perfume_bg_1794035270598.jpg';
 
 export default function App() {
   const [currentCategory, setCurrentCategory] = useState<FragranceFamily>('all');
@@ -120,18 +121,36 @@ export default function App() {
         onScrollToContacts={scrollToContacts}
       />
 
-      {/* Hero Presentation Strip (Quiet Luxury Aesthetic) */}
-      <section className="border-b border-[#E6E1D8] bg-[#F5F2EB] py-12 sm:py-16 md:py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      {/* Hero Presentation Strip with Quiet Luxury Background Image */}
+      <section className="relative border-b border-[#E6E1D8] overflow-hidden py-14 sm:py-20 md:py-24 bg-[#F5F2EB]">
+        {/* Background Image */}
+        <img
+          src={heroBg}
+          alt=""
+          aria-hidden="true"
+          className="absolute inset-0 w-full h-full object-cover object-center select-none"
+        />
+
+        {/* Soft Multi-Layer Scrim to keep text perfectly legible */}
+        <div 
+          aria-hidden="true" 
+          className="absolute inset-0 bg-gradient-to-r from-[#F8F7F4]/98 via-[#F8F7F4]/90 to-[#F8F7F4]/40 pointer-events-none" 
+        />
+        <div 
+          aria-hidden="true" 
+          className="absolute inset-0 bg-[#F8F7F4]/40 sm:bg-transparent pointer-events-none backdrop-blur-[0.5px]" 
+        />
+
+        <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-8">
             <div className="max-w-2xl">
-              <span className="text-[11px] font-mono tracking-[0.3em] uppercase text-[#8A847A] block mb-3">
+              <span className="text-[11px] font-mono tracking-[0.3em] uppercase text-[#736C61] block mb-3 font-medium">
                 Парфюмерная витрина · Селекция 2026
               </span>
               <h1 className="text-3xl sm:text-5xl md:text-6xl font-serif font-light text-[#1A1918] leading-[1.1] tracking-tight mb-4 text-balance">
                 Искусство чистой ольфакторной роскоши
               </h1>
-              <p className="text-sm sm:text-base text-[#6C665C] font-light leading-relaxed max-w-xl">
+              <p className="text-sm sm:text-base text-[#4A453D] font-light leading-relaxed max-w-xl">
                 Коллекция нишевых ароматов от независимых мануфактур Европы. Глубокие древесные смолы, дымный шафран, прованская роза и стручковая ваниль в авторских флаконах.
               </p>
             </div>
@@ -140,7 +159,7 @@ export default function App() {
             <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 shrink-0">
               <button
                 onClick={() => setIsDialogsModalOpen(true)}
-                className="flex items-center gap-2 px-4 py-2.5 text-xs font-medium tracking-wider uppercase bg-[#EAE5DC] hover:bg-[#DDD6CA] text-[#1A1918] border border-[#D5CDC0] rounded-xs transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-4 py-2.5 text-xs font-medium tracking-wider uppercase bg-[#FAF9F6]/90 hover:bg-white text-[#1A1918] border border-[#D5CDC0] rounded-xs shadow-xs backdrop-blur-xs transition-colors cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5 text-[#8B6B3E]" />
                 <span>История диалогов ({dialogs.length})</span>
@@ -148,7 +167,7 @@ export default function App() {
 
               <button
                 onClick={scrollToCatalog}
-                className="flex items-center gap-2 px-5 py-2.5 text-xs font-medium tracking-wider uppercase bg-[#1A1918] hover:bg-[#2C2925] text-[#FAF9F6] rounded-xs transition-colors cursor-pointer"
+                className="flex items-center gap-2 px-5 py-2.5 text-xs font-medium tracking-wider uppercase bg-[#1A1918] hover:bg-[#2C2925] text-[#FAF9F6] rounded-xs shadow-sm transition-colors cursor-pointer"
               >
                 <span>К каталогу ароматов</span>
                 <ArrowDown className="w-3.5 h-3.5" />

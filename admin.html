@@ -1,0 +1,880 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Панель управления витриной — Админ</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Google Fonts: Inter -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <!-- Supabase JS v2 CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: #F8F9FA;
+    }
+    /* Плавные переходы */
+    .fade-in {
+      animation: fadeIn 0.25s ease-in-out;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
+
+  <!-- ==================== ЭКРАН ВХОДА (АВТОРИЗАЦИЯ) ==================== -->
+  <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 sm:p-8 text-center border border-slate-100 fade-in">
+      <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
+        <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+        </svg>
+      </div>
+      <h1 class="text-xl font-bold text-slate-900 mb-1">Панель управления</h1>
+      <p class="text-xs text-slate-500 mb-6">Введите пароль администратора для входа</p>
+
+      <form id="authForm" onsubmit="handleLogin(event)" class="space-y-4">
+        <div>
+          <input 
+            type="password" 
+            id="passwordInput" 
+            placeholder="••••••••" 
+            required
+            autocomplete="current-password"
+            class="w-full px-4 py-3 text-center tracking-widest text-lg bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all placeholder:tracking-normal placeholder:text-sm"
+          />
+        </div>
+        <p id="authError" class="text-xs text-rose-500 font-medium hidden">Неверный пароль. Попробуйте еще раз.</p>
+        <button 
+          type="submit" 
+          class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98]"
+        >
+          Войти в панель
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ==================== ОСНОВНОЙ ИНТЕРФЕЙС АДМИНКИ ==================== -->
+  <div id="adminPanel" class="hidden flex-1 flex flex-col">
+    
+    <!-- Шапка панели -->
+    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200">
+      <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-9 h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-base shadow-xs">
+            П
+          </div>
+          <div>
+            <h2 class="text-sm sm:text-base font-bold text-slate-900 leading-tight">Витрина товаров</h2>
+            <p class="text-[11px] text-slate-500">Управление каталогом и складом</p>
+          </div>
+        </div>
+
+        <div class="flex items-center gap-2 sm:gap-3">
+          <a href="/" target="_blank" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
+            <span class="hidden sm:inline">Открыть сайт</span>
+          </a>
+          <button 
+            onclick="handleLogout()" 
+            class="px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors flex items-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
+            <span>Выйти</span>
+          </button>
+        </div>
+      </div>
+    </header>
+
+    <!-- Основной контент -->
+    <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-8">
+      
+      <!-- Блок: Форма добавления / редактирования товара -->
+      <section class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
+        <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
+          <div>
+            <h3 id="formTitle" class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+              <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+              Добавление нового товара
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Заполните поля ниже и прикрепите фотографии</p>
+          </div>
+          <!-- Кнопка сброса режима редактирования (показывается только при редактировании) -->
+          <button 
+            id="cancelEditBtn" 
+            onclick="resetFormToCreateMode()" 
+            class="hidden px-3 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+          >
+            Отменить редактирование
+          </button>
+        </div>
+
+        <form id="productForm" onsubmit="handleSaveProduct(event)" class="p-5 sm:p-6 space-y-6">
+          <input type="hidden" id="editingProductId" value="" />
+
+          <!-- Блок: Загрузка до 5 фотографий -->
+          <div>
+            <div class="flex items-center justify-between mb-2">
+              <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">
+                Фотографии товара (до 5 шт.) *
+              </label>
+              <!-- Бейдж счетчика -->
+              <span id="photoCounterBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                Выбрано 0 из 5 фото
+              </span>
+            </div>
+
+            <!-- Зона выбора файлов -->
+            <label class="relative flex flex-col items-center justify-center p-5 border-2 border-dashed border-slate-200 hover:border-indigo-400 bg-slate-50/60 hover:bg-indigo-50/30 rounded-xl cursor-pointer transition-all group">
+              <div class="flex flex-col items-center text-center">
+                <div class="w-10 h-10 mb-2 rounded-xl bg-white shadow-xs flex items-center justify-center text-slate-500 group-hover:text-indigo-600 transition-colors">
+                  <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                </div>
+                <p class="text-xs font-semibold text-slate-700 group-hover:text-indigo-600">
+                  Нажмите для выбора фото или перетащите их сюда
+                </p>
+                <p class="text-[11px] text-slate-400 mt-0.5">JPG, PNG, WEBP (максимум 5 файлов)</p>
+              </div>
+              <input 
+                type="file" 
+                id="photoInput" 
+                accept="image/*" 
+                multiple 
+                onchange="handleFilesSelected(event)" 
+                class="hidden" 
+              />
+            </label>
+
+            <!-- Сетка превью фотографий -->
+            <div id="photosPreviewGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4 hidden">
+              <!-- Карточки превью формируются скриптом -->
+            </div>
+          </div>
+
+          <!-- Поля формы -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            
+            <!-- Название товара -->
+            <div class="sm:col-span-2">
+              <label for="productName" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                Название товара *
+              </label>
+              <input 
+                type="text" 
+                id="productName" 
+                required 
+                placeholder="Например: Ambre Épicé"
+                class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              />
+            </div>
+
+            <!-- Категория -->
+            <div>
+              <label for="productCategory" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                Категория *
+              </label>
+              <select 
+                id="productCategory" 
+                required
+                class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              >
+                <option value="Унисекс">Унисекс</option>
+                <option value="Мужские">Мужские</option>
+                <option value="Женские">Женские</option>
+              </select>
+            </div>
+
+            <!-- Цена (в сомах) -->
+            <div>
+              <label for="productPrice" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                Цена (в сомах) *
+              </label>
+              <div class="relative">
+                <input 
+                  type="number" 
+                  id="productPrice" 
+                  required 
+                  min="0"
+                  step="1"
+                  placeholder="Например: 14500"
+                  class="w-full pl-3.5 pr-14 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-mono"
+                />
+                <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 select-none">
+                  сом
+                </span>
+              </div>
+            </div>
+
+            <!-- Объем / размер -->
+            <div>
+              <label for="productSize" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                Объем / размер *
+              </label>
+              <input 
+                type="text" 
+                id="productSize" 
+                required 
+                placeholder='Например: 50 мл, 100 мл или M'
+                class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              />
+            </div>
+
+            <!-- Цвет -->
+            <div>
+              <label for="productColor" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                Цвет
+              </label>
+              <input 
+                type="text" 
+                id="productColor" 
+                placeholder="Например: Золотистый, Черный"
+                class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              />
+            </div>
+
+            <!-- Описание товара (редактируемое) -->
+            <div class="sm:col-span-2 md:col-span-3">
+              <label for="productDescription" class="block text-xs font-semibold text-slate-700 mb-1.5">
+                Описание товара / ноты аромата
+              </label>
+              <textarea 
+                id="productDescription" 
+                rows="3" 
+                placeholder="Опишите аромат, ноты композиции, стойкость или особенности флакона..."
+                class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Кнопка отправки -->
+          <div class="pt-2 flex items-center justify-end gap-3">
+            <button 
+              type="submit" 
+              id="submitBtn"
+              class="w-full sm:w-auto px-6 py-3 bg-indigo-600 hover:bg-indigo-700 active:scale-[0.98] text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-indigo-600/20 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 disabled:pointer-events-none"
+            >
+              <svg id="btnSpinner" class="w-4 h-4 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+              <span id="submitBtnText">Опубликовать товар</span>
+            </button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Блок: Список текущих товаров -->
+      <section class="space-y-4">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div>
+            <h3 class="text-base sm:text-lg font-bold text-slate-900 flex items-center gap-2">
+              <span>Список товаров</span>
+              <span id="productsCountBadge" class="text-xs font-semibold px-2 py-0.5 rounded-full bg-slate-200 text-slate-700">
+                0
+              </span>
+            </h3>
+            <p class="text-xs text-slate-500 mt-0.5">Все карточки, опубликованные в базе данных Supabase</p>
+          </div>
+
+          <!-- Кнопка ручного обновления -->
+          <button 
+            onclick="loadProducts()" 
+            class="self-start sm:self-auto px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5"
+          >
+            <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
+            <span>Обновить список</span>
+          </button>
+        </div>
+
+        <!-- Сетка карточек товаров: 4 на ПК, 3 на планшете, 2 на телефоне -->
+        <div id="productsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
+          <!-- Заполняется динамически -->
+        </div>
+
+        <!-- Состояние загрузки -->
+        <div id="productsLoading" class="py-16 text-center text-slate-400">
+          <div class="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
+          <p class="text-xs">Загрузка товаров из базы данных...</p>
+        </div>
+
+        <!-- Пустое состояние -->
+        <div id="productsEmpty" class="py-16 text-center bg-white rounded-2xl border border-dashed border-slate-200 p-8 hidden">
+          <div class="w-12 h-12 bg-slate-100 text-slate-400 rounded-2xl flex items-center justify-center mx-auto mb-3">
+            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/></svg>
+          </div>
+          <h4 class="text-sm font-semibold text-slate-800 mb-1">Товары еще не добавлены</h4>
+          <p class="text-xs text-slate-400 max-w-sm mx-auto">Используйте форму выше, чтобы добавить первый товар в витрину магазина.</p>
+        </div>
+      </section>
+    </main>
+
+    <!-- Подвал панели -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+      Админ-панель витрины · Supabase Database & Storage · Валюта: сом
+    </footer>
+  </div>
+
+  <!-- Всплывающее уведомление (Toast) -->
+  <div id="toastNotification" class="fixed bottom-5 right-5 z-50 transform translate-y-24 opacity-0 transition-all duration-300 pointer-events-none">
+    <div id="toastBox" class="flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-xs font-semibold bg-emerald-600 text-white">
+      <svg id="toastIcon" class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+      </svg>
+      <span id="toastMsg">Товар успешно добавлен!</span>
+    </div>
+  </div>
+
+  <!-- ==================== СКРИПТ УПРАВЛЕНИЯ ПАНЕЛЬЮ ==================== -->
+  <script>
+    // 1. Конфигурация Supabase
+    const SUPABASE_URL = "https://yyhkgkajfpymtbahnrar.supabase.co";
+    const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl5aGtna2FqZnB5bXRiYWhucmFyIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTQwMzEyNTksImV4cCI6MjEwOTYwNzI1OX0.10Cq23jRJd8JXs0vNGHn8KxIVEW-N0TQ-XjvCACl9_Y";
+    const STORAGE_BUCKET = "product-images";
+    const TABLE_NAME = "products";
+    const ADMIN_PASSWORD = "admin1234";
+
+    // Инициализация клиента Supabase
+    const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+    // Локальное состояние загруженных фото
+    // Элемент массива: { id: string, file?: File, url: string, isPrimary: boolean, isExisting?: boolean }
+    let selectedPhotos = [];
+    let loadedProductsList = [];
+
+    // 2. Логика авторизации
+    function checkAuth() {
+      const isAuth = sessionStorage.getItem("admin_logged_in") === "true";
+      const authScreen = document.getElementById("authScreen");
+      const adminPanel = document.getElementById("adminPanel");
+
+      if (isAuth) {
+        authScreen.classList.add("hidden");
+        adminPanel.classList.remove("hidden");
+        loadProducts();
+      } else {
+        authScreen.classList.remove("hidden");
+        adminPanel.classList.add("hidden");
+        document.getElementById("passwordInput").focus();
+      }
+    }
+
+    function handleLogin(e) {
+      e.preventDefault();
+      const enteredPass = document.getElementById("passwordInput").value;
+      const errorEl = document.getElementById("authError");
+
+      if (enteredPass === ADMIN_PASSWORD) {
+        sessionStorage.setItem("admin_logged_in", "true");
+        errorEl.classList.add("hidden");
+        document.getElementById("passwordInput").value = "";
+        checkAuth();
+        showToast("Успешный вход в систему!", "success");
+      } else {
+        errorEl.classList.remove("hidden");
+        document.getElementById("passwordInput").value = "";
+        document.getElementById("passwordInput").focus();
+      }
+    }
+
+    function handleLogout() {
+      sessionStorage.removeItem("admin_logged_in");
+      checkAuth();
+      showToast("Вы вышли из системы", "info");
+    }
+
+    // 3. Управление выбором фото (до 5 шт., главное фото, удаление)
+    function handleFilesSelected(event) {
+      const files = Array.from(event.target.files);
+      if (!files.length) return;
+
+      const remainingSlots = 5 - selectedPhotos.length;
+      if (remainingSlots <= 0) {
+        showToast("Максимум можно добавить 5 фото", "error");
+        event.target.value = "";
+        return;
+      }
+
+      const filesToAdd = files.slice(0, remainingSlots);
+      if (files.length > remainingSlots) {
+        showToast(`Выбрано только ${remainingSlots} фото из-за лимита в 5 шт.`, "info");
+      }
+
+      filesToAdd.forEach((file, index) => {
+        const previewUrl = URL.createObjectURL(file);
+        const isFirstEver = selectedPhotos.length === 0 && index === 0;
+        selectedPhotos.push({
+          id: `file_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`,
+          file: file,
+          url: previewUrl,
+          isPrimary: isFirstEver,
+          isExisting: false
+        });
+      });
+
+      // Если ни одно фото не назначено главным, делаем первое
+      if (!selectedPhotos.some(p => p.isPrimary) && selectedPhotos.length > 0) {
+        selectedPhotos[0].isPrimary = true;
+      }
+
+      renderPhotoPreviews();
+      event.target.value = "";
+    }
+
+    function setPrimaryPhoto(id) {
+      selectedPhotos.forEach(p => {
+        p.isPrimary = (p.id === id);
+      });
+      renderPhotoPreviews();
+    }
+
+    function removePhoto(id) {
+      const idx = selectedPhotos.findIndex(p => p.id === id);
+      if (idx !== -1) {
+        const wasPrimary = selectedPhotos[idx].isPrimary;
+        selectedPhotos.splice(idx, 1);
+        if (wasPrimary && selectedPhotos.length > 0) {
+          selectedPhotos[0].isPrimary = true;
+        }
+      }
+      renderPhotoPreviews();
+    }
+
+    function renderPhotoPreviews() {
+      const grid = document.getElementById("photosPreviewGrid");
+      const badge = document.getElementById("photoCounterBadge");
+
+      badge.textContent = `Выбрано ${selectedPhotos.length} из 5 фото`;
+      badge.className = selectedPhotos.length > 0 
+        ? "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-indigo-50 text-indigo-700" 
+        : "text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600";
+
+      if (selectedPhotos.length === 0) {
+        grid.innerHTML = "";
+        grid.classList.add("hidden");
+        return;
+      }
+
+      grid.classList.remove("hidden");
+      grid.innerHTML = selectedPhotos.map(photo => `
+        <div class="relative group rounded-xl overflow-hidden border-2 ${photo.isPrimary ? 'border-indigo-600 ring-2 ring-indigo-600/20 shadow-xs' : 'border-slate-200'} bg-slate-100 aspect-square flex items-center justify-center">
+          <img src="${photo.url}" class="w-full h-full object-cover" alt="Превью" />
+          
+          <!-- Метка главного фото -->
+          ${photo.isPrimary ? `
+            <div class="absolute top-1.5 left-1.5 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
+              <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+              Главное
+            </div>
+          ` : `
+            <button 
+              type="button" 
+              onclick="setPrimaryPhoto('${photo.id}')" 
+              class="absolute bottom-1.5 left-1.5 right-1.5 bg-white/90 hover:bg-white text-slate-800 text-[10px] font-semibold py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-xs"
+            >
+              Сделать главным
+            </button>
+          `}
+
+          <!-- Кнопка удаления отдельного фото -->
+          <button 
+            type="button" 
+            onclick="removePhoto('${photo.id}')" 
+            class="absolute top-1.5 right-1.5 w-6 h-6 bg-slate-900/70 hover:bg-rose-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xs"
+            title="Удалить снимок"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
+          </button>
+        </div>
+      `).join("");
+    }
+
+    // 4. Загрузка в Supabase Storage и сохранение в базу
+    async function handleSaveProduct(e) {
+      e.preventDefault();
+
+      if (selectedPhotos.length === 0) {
+        showToast("Пожалуйста, прикрепите хотя бы одну фотографию товара!", "error");
+        return;
+      }
+
+      const submitBtn = document.getElementById("submitBtn");
+      const submitText = document.getElementById("submitBtnText");
+      const spinner = document.getElementById("btnSpinner");
+      const editingId = document.getElementById("editingProductId").value;
+
+      // Блокируем кнопку
+      submitBtn.disabled = true;
+      spinner.classList.remove("hidden");
+      submitText.textContent = editingId ? "Сохранение изменений..." : "Загрузка фото и публикация...";
+
+      try {
+        // Упорядочиваем: главное фото идет первым
+        const sortedPhotos = [...selectedPhotos].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
+        const finalImageUrls = [];
+
+        // Загружаем каждое новое фото в Supabase Storage
+        for (const item of sortedPhotos) {
+          if (item.isExisting && item.url) {
+            finalImageUrls.push(item.url);
+          } else if (item.file) {
+            const file = item.file;
+            const fileExt = file.name.split('.').pop() || 'jpg';
+            const uniqueFileName = `product_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
+
+            // Загрузка файла в корзину product-images
+            const { data: uploadData, error: uploadError } = await supabase
+              .storage
+              .from(STORAGE_BUCKET)
+              .upload(uniqueFileName, file, {
+                cacheControl: '3600',
+                upsert: false
+              });
+
+            if (uploadError) {
+              console.error("Ошибка при загрузке фото в Storage:", uploadError);
+              throw new Error(`Ошибка загрузки фото: ${uploadError.message}`);
+            }
+
+            // Получаем публичную ссылку
+            const { data: publicUrlData } = supabase
+              .storage
+              .from(STORAGE_BUCKET)
+              .getPublicUrl(uniqueFileName);
+
+            if (publicUrlData && publicUrlData.publicUrl) {
+              finalImageUrls.push(publicUrlData.publicUrl);
+            }
+          }
+        }
+
+        const primaryImageUrl = finalImageUrls[0] || "";
+
+        // Сборка объекта данных товара
+        const nameVal = document.getElementById("productName").value.trim();
+        const categoryVal = document.getElementById("productCategory").value;
+        const priceVal = parseFloat(document.getElementById("productPrice").value) || 0;
+        const sizeVal = document.getElementById("productSize").value.trim();
+        const colorVal = document.getElementById("productColor").value.trim();
+        const descriptionVal = document.getElementById("productDescription").value.trim();
+
+        // Поля адаптированы под стандартные схемы Supabase
+        const payload = {
+          name: nameVal,
+          title: nameVal, // на случай, если колонка называется title
+          category: categoryVal,
+          price: priceVal,
+          size: sizeVal,
+          volume: sizeVal, // на случай, если колонка называется volume
+          color: colorVal,
+          description: descriptionVal,
+          image: primaryImageUrl,
+          image_url: primaryImageUrl,
+          images: finalImageUrls
+        };
+
+        if (editingId) {
+          // Режим обновления существующей карточки
+          const { error: updateError } = await supabase
+            .from(TABLE_NAME)
+            .update(payload)
+            .eq("id", editingId);
+
+          if (updateError) {
+            console.error("Ошибка при обновлении товара:", updateError);
+            throw updateError;
+          }
+          showToast("Товар успешно обновлен!", "success");
+        } else {
+          // Режим добавления новой записи
+          const { error: insertError } = await supabase
+            .from(TABLE_NAME)
+            .insert([payload]);
+
+          if (insertError) {
+            console.error("Ошибка при создании товара:", insertError);
+            throw insertError;
+          }
+          showToast("Товар успешно добавлен!", "success");
+        }
+
+        // Очищаем форму и возвращаем стандартный вид
+        resetFormToCreateMode();
+        // Перезагружаем список
+        loadProducts();
+
+      } catch (err) {
+        console.error("Ошибка сохранения товара:", err);
+        showToast(err.message || "Не удалось сохранить товар. Проверьте соединение с базой.", "error");
+      } finally {
+        submitBtn.disabled = false;
+        spinner.classList.add("hidden");
+        const isEditing = Boolean(document.getElementById("editingProductId").value);
+        submitText.textContent = isEditing ? "Сохранить изменения" : "Опубликовать товар";
+      }
+    }
+
+    // 5. Загрузка списка товаров из базы Supabase
+    async function loadProducts() {
+      const grid = document.getElementById("productsGrid");
+      const loading = document.getElementById("productsLoading");
+      const empty = document.getElementById("productsEmpty");
+      const countBadge = document.getElementById("productsCountBadge");
+
+      loading.classList.remove("hidden");
+      empty.classList.add("hidden");
+      grid.innerHTML = "";
+
+      try {
+        const { data, error } = await supabase
+          .from(TABLE_NAME)
+          .select("*")
+          .order("id", { ascending: false });
+
+        if (error) {
+          console.error("Ошибка при получении товаров:", error);
+          throw error;
+        }
+
+        loadedProductsList = data || [];
+        countBadge.textContent = loadedProductsList.length;
+
+        if (loadedProductsList.length === 0) {
+          empty.classList.remove("hidden");
+        } else {
+          renderProductsGrid(loadedProductsList);
+        }
+      } catch (err) {
+        console.error("Ошибка загрузки товаров:", err);
+        grid.innerHTML = `
+          <div class="col-span-full p-4 bg-rose-50 border border-rose-200 text-rose-700 rounded-xl text-xs">
+            Не удалось загрузить список товаров: ${err.message || 'Проверьте таблицу products в Supabase'}.
+          </div>
+        `;
+      } finally {
+        loading.classList.add("hidden");
+      }
+    }
+
+    // Отрисовка плитки товаров: 4 на ПК, 3 на планшете, 2 на телефоне
+    function renderProductsGrid(products) {
+      const grid = document.getElementById("productsGrid");
+      
+      grid.innerHTML = products.map(product => {
+        const title = product.name || product.title || "Без названия";
+        const price = product.price !== undefined ? product.price : 0;
+        const size = product.size || product.volume || "—";
+        const color = product.color || "—";
+        const category = product.category || "Унисекс";
+        const description = product.description || "";
+        
+        // Определение главного фото
+        let mainImg = product.image || product.image_url;
+        if (!mainImg && Array.isArray(product.images) && product.images.length > 0) {
+          mainImg = product.images[0];
+        }
+        if (!mainImg) {
+          mainImg = "data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22200%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23F1F5F9%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2214%22%20fill%3D%22%2394A3B8%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3E%D0%9D%D0%B5%D1%82%20%D1%84%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E";
+        }
+
+        const photosCount = Array.isArray(product.images) ? product.images.length : (product.image ? 1 : 0);
+
+        return `
+          <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col group hover:shadow-md hover:border-slate-300 transition-all">
+            <!-- Миниатюра фото -->
+            <div class="relative aspect-square bg-slate-100 overflow-hidden">
+              <img 
+                src="${mainImg}" 
+                alt="${title}" 
+                loading="lazy"
+                class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22200%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23F1F5F9%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2214%22%20fill%3D%22%2394A3B8%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3E%D0%A4%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E'"
+              />
+
+              <!-- Категория бейдж -->
+              <span class="absolute top-2 left-2 text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-xs text-slate-800 shadow-2xs">
+                ${category}
+              </span>
+
+              <!-- Количество фото -->
+              ${photosCount > 1 ? `
+                <span class="absolute bottom-2 right-2 text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-900/70 text-white flex items-center gap-1 backdrop-blur-xs">
+                  <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+                  ${photosCount}
+                </span>
+              ` : ''}
+            </div>
+
+            <!-- Инфо часть -->
+            <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
+              <div>
+                <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-1 mb-1" title="${title}">
+                  ${title}
+                </h4>
+
+                <div class="text-[11px] text-slate-500 space-y-0.5 mb-2">
+                  <p><span class="text-slate-400">Размер:</span> <span class="font-medium text-slate-700">${size}</span></p>
+                  <p><span class="text-slate-400">Цвет:</span> <span class="font-medium text-slate-700">${color}</span></p>
+                </div>
+
+                ${description ? `
+                  <p class="text-[11px] text-slate-400 line-clamp-2 italic mb-2">
+                    ${description}
+                  </p>
+                ` : ''}
+              </div>
+
+              <!-- Цена и действия -->
+              <div class="pt-2 border-t border-slate-100 flex flex-col gap-2">
+                <div class="font-bold text-sm sm:text-base text-slate-900 font-mono">
+                  ${price.toLocaleString('ru-RU')} <span class="text-xs font-normal text-slate-500">сом</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-1.5">
+                  <!-- Кнопка редактирования (заполняет форму описанием и полями) -->
+                  <button 
+                    onclick="handleEditProduct('${product.id}')" 
+                    class="py-1.5 px-2 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    title="Редактировать описание и параметры"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+                    <span>Изм.</span>
+                  </button>
+
+                  <!-- Кнопка удаления -->
+                  <button 
+                    onclick="handleDeleteProduct('${product.id}', '${title.replace(/'/g, "\\'")}')" 
+                    class="py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                    title="Удалить карточку товара"
+                  >
+                    <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/></svg>
+                    <span>Удалить</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    // 6. Редактирование карточки ранее добавленного товара
+    function handleEditProduct(productId) {
+      const product = loadedProductsList.find(p => String(p.id) === String(productId));
+      if (!product) return;
+
+      document.getElementById("editingProductId").value = product.id;
+      document.getElementById("productName").value = product.name || product.title || "";
+      document.getElementById("productCategory").value = product.category || "Унисекс";
+      document.getElementById("productPrice").value = product.price !== undefined ? product.price : "";
+      document.getElementById("productSize").value = product.size || product.volume || "";
+      document.getElementById("productColor").value = product.color || "";
+      document.getElementById("productDescription").value = product.description || "";
+
+      // Восстанавливаем ранее загруженные фото в превью
+      selectedPhotos = [];
+      const imagesList = Array.isArray(product.images) && product.images.length > 0 
+        ? product.images 
+        : (product.image || product.image_url ? [product.image || product.image_url] : []);
+
+      imagesList.slice(0, 5).forEach((url, idx) => {
+        selectedPhotos.push({
+          id: `existing_${idx}_${Date.now()}`,
+          url: url,
+          isPrimary: idx === 0,
+          isExisting: true
+        });
+      });
+
+      renderPhotoPreviews();
+
+      // Обновляем заголовок и кнопку
+      document.getElementById("formTitle").innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
+        Редактирование: ${product.name || product.title || 'Товар'}
+      `;
+      document.getElementById("cancelEditBtn").classList.remove("hidden");
+      document.getElementById("submitBtnText").textContent = "Сохранить изменения";
+
+      // Прокручиваем к форме
+      document.getElementById("productForm").scrollIntoView({ behavior: "smooth", block: "start" });
+      showToast("Режим редактирования активирован", "info");
+    }
+
+    function resetFormToCreateMode() {
+      document.getElementById("editingProductId").value = "";
+      document.getElementById("productForm").reset();
+      selectedPhotos = [];
+      renderPhotoPreviews();
+
+      document.getElementById("formTitle").innerHTML = `
+        <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
+        Добавление нового товара
+      `;
+      document.getElementById("cancelEditBtn").classList.add("hidden");
+      document.getElementById("submitBtnText").textContent = "Опубликовать товар";
+    }
+
+    // 7. Удаление товара из Supabase
+    async function handleDeleteProduct(productId, productTitle) {
+      const confirmDelete = confirm(`Вы действительно хотите удалить товар «${productTitle}» из базы?`);
+      if (!confirmDelete) return;
+
+      try {
+        const { error } = await supabase
+          .from(TABLE_NAME)
+          .delete()
+          .eq("id", productId);
+
+        if (error) {
+          console.error("Ошибка при удалении:", error);
+          throw error;
+        }
+
+        showToast(`Товар «${productTitle}» удален!`, "success");
+        loadProducts();
+      } catch (err) {
+        console.error("Ошибка удаления:", err);
+        showToast("Не удалось удалить товар: " + (err.message || "ошибка базы"), "error");
+      }
+    }
+
+    // 8. Уведомления (Toast)
+    let toastTimeout = null;
+    function showToast(message, type = "success") {
+      const toast = document.getElementById("toastNotification");
+      const toastBox = document.getElementById("toastBox");
+      const toastMsg = document.getElementById("toastMsg");
+
+      toastMsg.textContent = message;
+
+      if (type === "success") {
+        toastBox.className = "flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-xs font-semibold bg-emerald-600 text-white";
+      } else if (type === "error") {
+        toastBox.className = "flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-xs font-semibold bg-rose-600 text-white";
+      } else {
+        toastBox.className = "flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-lg text-xs font-semibold bg-slate-800 text-white";
+      }
+
+      toast.classList.remove("translate-y-24", "opacity-0");
+      toast.classList.add("translate-y-0", "opacity-100");
+
+      if (toastTimeout) clearTimeout(toastTimeout);
+      toastTimeout = setTimeout(() => {
+        toast.classList.remove("translate-y-0", "opacity-100");
+        toast.classList.add("translate-y-24", "opacity-0");
+      }, 3500);
+    }
+
+    // Автоматическая проверка авторизации при открытии страницы
+    window.addEventListener("DOMContentLoaded", checkAuth);
+  </script>
+</body>
+</html>
