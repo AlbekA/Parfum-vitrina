@@ -17,7 +17,10 @@
       font-family: 'Inter', sans-serif;
       background-color: #F8F9FA;
     }
-    /* Плавные переходы */
+    /* Гарантированное скрытие элементов независимо от специфичности flex/grid */
+    .hidden {
+      display: none !important;
+    }
     .fade-in {
       animation: fadeIn 0.25s ease-in-out;
     }
@@ -30,8 +33,8 @@
 <body class="text-slate-800 antialiased min-h-screen flex flex-col justify-between">
 
   <!-- ==================== ЭКРАН ВХОДА (АВТОРИЗАЦИЯ) ==================== -->
-  <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4">
-    <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm p-6 sm:p-8 text-center border border-slate-100 fade-in">
+  <div id="authScreen" class="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
+    <div class="bg-white rounded-2xl shadow-2xl w-full max-w-sm p-6 sm:p-8 text-center border border-slate-100 fade-in">
       <div class="w-14 h-14 bg-indigo-50 text-indigo-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
         <svg class="w-7 h-7" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
@@ -40,7 +43,7 @@
       <h1 class="text-xl font-bold text-slate-900 mb-1">Панель управления</h1>
       <p class="text-xs text-slate-500 mb-6">Введите пароль администратора для входа</p>
 
-      <form id="authForm" onsubmit="handleLogin(event)" class="space-y-4">
+      <form id="authForm" onsubmit="event.preventDefault(); handleLogin(event); return false;" class="space-y-4">
         <div>
           <input 
             type="password" 
@@ -54,7 +57,8 @@
         <p id="authError" class="text-xs text-rose-500 font-medium hidden">Неверный пароль. Попробуйте еще раз.</p>
         <button 
           type="submit" 
-          class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98]"
+          id="authSubmitBtn"
+          class="w-full py-3 px-4 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-indigo-600/20 active:scale-[0.98] cursor-pointer"
         >
           Войти в панель
         </button>
@@ -66,7 +70,7 @@
   <div id="adminPanel" class="hidden flex-1 flex flex-col">
     
     <!-- Шапка панели -->
-    <header class="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-slate-200">
+    <header class="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-200">
       <div class="max-w-6xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
         <div class="flex items-center gap-3">
           <div class="w-9 h-9 bg-indigo-600 text-white rounded-xl flex items-center justify-center font-bold text-base shadow-xs">
@@ -81,11 +85,12 @@
         <div class="flex items-center gap-2 sm:gap-3">
           <a href="/" target="_blank" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:text-slate-900 bg-slate-100 hover:bg-slate-200 rounded-lg transition-colors flex items-center gap-1.5">
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"/></svg>
-            <span class="hidden sm:inline">Открыть сайт</span>
+            <span class="hidden sm:inline">Открыть витрину</span>
           </a>
           <button 
+            type="button"
             onclick="handleLogout()" 
-            class="px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors flex items-center gap-1.5"
+            class="px-3 py-1.5 text-xs font-medium text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1"/></svg>
             <span>Выйти</span>
@@ -97,7 +102,7 @@
     <!-- Основной контент -->
     <main class="max-w-6xl mx-auto px-4 sm:px-6 py-6 sm:py-8 flex-1 w-full space-y-8">
       
-      <!-- Блок: Форма добавления / редактирования товара -->
+      <!-- Форма добавления / редактирования товара -->
       <section class="bg-white rounded-2xl shadow-xs border border-slate-200/80 overflow-hidden">
         <div class="p-5 sm:p-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/50">
           <div>
@@ -107,26 +112,25 @@
             </h3>
             <p class="text-xs text-slate-500 mt-0.5">Заполните поля ниже и прикрепите фотографии</p>
           </div>
-          <!-- Кнопка сброса режима редактирования (показывается только при редактировании) -->
           <button 
             id="cancelEditBtn" 
+            type="button"
             onclick="resetFormToCreateMode()" 
-            class="hidden px-3 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors"
+            class="hidden px-3 py-1.5 text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-lg transition-colors cursor-pointer"
           >
             Отменить редактирование
           </button>
         </div>
 
-        <form id="productForm" onsubmit="handleSaveProduct(event)" class="p-5 sm:p-6 space-y-6">
+        <form id="productForm" onsubmit="event.preventDefault(); handleSaveProduct(event); return false;" class="p-5 sm:p-6 space-y-6">
           <input type="hidden" id="editingProductId" value="" />
 
-          <!-- Блок: Загрузка до 5 фотографий -->
+          <!-- Блок: Загрузка до 5 фото -->
           <div>
             <div class="flex items-center justify-between mb-2">
               <label class="block text-xs font-semibold uppercase tracking-wider text-slate-700">
                 Фотографии товара (до 5 шт.) *
               </label>
-              <!-- Бейдж счетчика -->
               <span id="photoCounterBadge" class="text-xs font-semibold px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-600">
                 Выбрано 0 из 5 фото
               </span>
@@ -153,13 +157,11 @@
               />
             </label>
 
-            <!-- Сетка превью фотографий -->
-            <div id="photosPreviewGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4 hidden">
-              <!-- Карточки превью формируются скриптом -->
-            </div>
+            <!-- Сетка превью выбранных фото -->
+            <div id="photosPreviewGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 mt-4 hidden"></div>
           </div>
 
-          <!-- Поля формы -->
+          <!-- Поля параметров товара -->
           <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             
             <!-- Название товара -->
@@ -184,7 +186,7 @@
               <select 
                 id="productCategory" 
                 required
-                class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all"
+                class="w-full px-3.5 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all cursor-pointer"
               >
                 <option value="Унисекс">Унисекс</option>
                 <option value="Мужские">Мужские</option>
@@ -192,7 +194,7 @@
               </select>
             </div>
 
-            <!-- Цена (в сомах) -->
+            <!-- Цена в сомах -->
             <div>
               <label for="productPrice" class="block text-xs font-semibold text-slate-700 mb-1.5">
                 Цена (в сомах) *
@@ -204,7 +206,7 @@
                   required 
                   min="0"
                   step="1"
-                  placeholder="Например: 14500"
+                  placeholder="14500"
                   class="w-full pl-3.5 pr-14 py-2.5 text-sm bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all font-mono"
                 />
                 <span class="absolute right-3.5 top-1/2 -translate-y-1/2 text-xs font-semibold text-slate-500 select-none">
@@ -243,7 +245,7 @@
             <!-- Описание товара (редактируемое) -->
             <div class="sm:col-span-2 md:col-span-3">
               <label for="productDescription" class="block text-xs font-semibold text-slate-700 mb-1.5">
-                Описание товара / ноты аромата
+                Описание товара / пирамида нот
               </label>
               <textarea 
                 id="productDescription" 
@@ -271,7 +273,7 @@
         </form>
       </section>
 
-      <!-- Блок: Список текущих товаров -->
+      <!-- Список текущих товаров -->
       <section class="space-y-4">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
           <div>
@@ -284,22 +286,20 @@
             <p class="text-xs text-slate-500 mt-0.5">Все карточки, опубликованные в базе данных Supabase</p>
           </div>
 
-          <!-- Кнопка ручного обновления -->
           <button 
+            type="button"
             onclick="loadProducts()" 
-            class="self-start sm:self-auto px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5"
+            class="self-start sm:self-auto px-3.5 py-1.5 text-xs font-medium text-slate-700 bg-white hover:bg-slate-50 border border-slate-200 rounded-lg shadow-2xs transition-colors flex items-center gap-1.5 cursor-pointer"
           >
             <svg class="w-3.5 h-3.5 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"/></svg>
             <span>Обновить список</span>
           </button>
         </div>
 
-        <!-- Сетка карточек товаров: 4 на ПК, 3 на планшете, 2 на телефоне -->
-        <div id="productsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-          <!-- Заполняется динамически -->
-        </div>
+        <!-- Адаптивная плитка: 4 на ПК, 3 на планшете, 2 на телефоне -->
+        <div id="productsGrid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4"></div>
 
-        <!-- Состояние загрузки -->
+        <!-- Индикатор загрузки -->
         <div id="productsLoading" class="py-16 text-center text-slate-400">
           <div class="w-8 h-8 border-3 border-indigo-600 border-t-transparent rounded-full animate-spin mx-auto mb-3"></div>
           <p class="text-xs">Загрузка товаров из базы данных...</p>
@@ -341,56 +341,93 @@
     const TABLE_NAME = "products";
     const ADMIN_PASSWORD = "admin1234";
 
-    // Инициализация клиента Supabase
+    // Клиент Supabase JS v2
     const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-    // Локальное состояние загруженных фото
-    // Элемент массива: { id: string, file?: File, url: string, isPrimary: boolean, isExisting?: boolean }
+    // Флаг авторизации в памяти
+    let isAuthenticated = false;
     let selectedPhotos = [];
     let loadedProductsList = [];
 
     // 2. Логика авторизации
     function checkAuth() {
-      const isAuth = sessionStorage.getItem("admin_logged_in") === "true";
+      let isStoredAuth = false;
+      try {
+        isStoredAuth = sessionStorage.getItem("admin_logged_in") === "true";
+      } catch (e) {
+        console.warn("sessionStorage недоступен, используется локальная переменная");
+      }
+
+      const isAuth = isStoredAuth || isAuthenticated;
       const authScreen = document.getElementById("authScreen");
       const adminPanel = document.getElementById("adminPanel");
 
       if (isAuth) {
+        isAuthenticated = true;
+        authScreen.style.display = "none";
         authScreen.classList.add("hidden");
+
+        adminPanel.style.display = "flex";
         adminPanel.classList.remove("hidden");
-        loadProducts();
+
+        // Загружаем товары
+        try {
+          loadProducts();
+        } catch (err) {
+          console.error("Ошибка при первоначальной загрузке:", err);
+        }
       } else {
+        authScreen.style.display = "flex";
         authScreen.classList.remove("hidden");
+
+        adminPanel.style.display = "none";
         adminPanel.classList.add("hidden");
-        document.getElementById("passwordInput").focus();
+
+        const passInput = document.getElementById("passwordInput");
+        if (passInput) passInput.focus();
       }
     }
 
     function handleLogin(e) {
-      e.preventDefault();
-      const enteredPass = document.getElementById("passwordInput").value;
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
+
+      const inputEl = document.getElementById("passwordInput");
       const errorEl = document.getElementById("authError");
+      const enteredPass = (inputEl.value || "").trim();
 
       if (enteredPass === ADMIN_PASSWORD) {
-        sessionStorage.setItem("admin_logged_in", "true");
+        isAuthenticated = true;
+        try {
+          sessionStorage.setItem("admin_logged_in", "true");
+        } catch (e) {
+          console.warn("Не удалось записать в sessionStorage:", e);
+        }
+
         errorEl.classList.add("hidden");
-        document.getElementById("passwordInput").value = "";
+        inputEl.value = "";
         checkAuth();
         showToast("Успешный вход в систему!", "success");
       } else {
         errorEl.classList.remove("hidden");
-        document.getElementById("passwordInput").value = "";
-        document.getElementById("passwordInput").focus();
+        inputEl.value = "";
+        inputEl.focus();
       }
+      return false;
     }
 
     function handleLogout() {
-      sessionStorage.removeItem("admin_logged_in");
+      isAuthenticated = false;
+      try {
+        sessionStorage.removeItem("admin_logged_in");
+      } catch (e) {}
       checkAuth();
       showToast("Вы вышли из системы", "info");
     }
 
-    // 3. Управление выбором фото (до 5 шт., главное фото, удаление)
+    // 3. Выбор фото (до 5 шт., выбор главного, удаление)
     function handleFilesSelected(event) {
       const files = Array.from(event.target.files);
       if (!files.length) return;
@@ -419,7 +456,6 @@
         });
       });
 
-      // Если ни одно фото не назначено главным, делаем первое
       if (!selectedPhotos.some(p => p.isPrimary) && selectedPhotos.length > 0) {
         selectedPhotos[0].isPrimary = true;
       }
@@ -458,16 +494,17 @@
 
       if (selectedPhotos.length === 0) {
         grid.innerHTML = "";
+        grid.style.display = "none";
         grid.classList.add("hidden");
         return;
       }
 
+      grid.style.display = "grid";
       grid.classList.remove("hidden");
       grid.innerHTML = selectedPhotos.map(photo => `
         <div class="relative group rounded-xl overflow-hidden border-2 ${photo.isPrimary ? 'border-indigo-600 ring-2 ring-indigo-600/20 shadow-xs' : 'border-slate-200'} bg-slate-100 aspect-square flex items-center justify-center">
           <img src="${photo.url}" class="w-full h-full object-cover" alt="Превью" />
           
-          <!-- Метка главного фото -->
           ${photo.isPrimary ? `
             <div class="absolute top-1.5 left-1.5 bg-indigo-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-xs flex items-center gap-1">
               <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
@@ -477,17 +514,16 @@
             <button 
               type="button" 
               onclick="setPrimaryPhoto('${photo.id}')" 
-              class="absolute bottom-1.5 left-1.5 right-1.5 bg-white/90 hover:bg-white text-slate-800 text-[10px] font-semibold py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-xs"
+              class="absolute bottom-1.5 left-1.5 right-1.5 bg-white/90 hover:bg-white text-slate-800 text-[10px] font-semibold py-1 rounded-md opacity-0 group-hover:opacity-100 transition-opacity shadow-xs cursor-pointer"
             >
               Сделать главным
             </button>
           `}
 
-          <!-- Кнопка удаления отдельного фото -->
           <button 
             type="button" 
             onclick="removePhoto('${photo.id}')" 
-            class="absolute top-1.5 right-1.5 w-6 h-6 bg-slate-900/70 hover:bg-rose-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xs"
+            class="absolute top-1.5 right-1.5 w-6 h-6 bg-slate-900/70 hover:bg-rose-600 text-white rounded-full flex items-center justify-center transition-colors shadow-xs cursor-pointer"
             title="Удалить снимок"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
@@ -496,9 +532,12 @@
       `).join("");
     }
 
-    // 4. Загрузка в Supabase Storage и сохранение в базу
+    // 4. Загрузка в Supabase Storage и запись в таблицу products
     async function handleSaveProduct(e) {
-      e.preventDefault();
+      if (e) {
+        e.preventDefault();
+        e.stopPropagation();
+      }
 
       if (selectedPhotos.length === 0) {
         showToast("Пожалуйста, прикрепите хотя бы одну фотографию товара!", "error");
@@ -510,17 +549,15 @@
       const spinner = document.getElementById("btnSpinner");
       const editingId = document.getElementById("editingProductId").value;
 
-      // Блокируем кнопку
       submitBtn.disabled = true;
       spinner.classList.remove("hidden");
       submitText.textContent = editingId ? "Сохранение изменений..." : "Загрузка фото и публикация...";
 
       try {
-        // Упорядочиваем: главное фото идет первым
         const sortedPhotos = [...selectedPhotos].sort((a, b) => (b.isPrimary ? 1 : 0) - (a.isPrimary ? 1 : 0));
         const finalImageUrls = [];
 
-        // Загружаем каждое новое фото в Supabase Storage
+        // Загрузка файлов в Storage
         for (const item of sortedPhotos) {
           if (item.isExisting && item.url) {
             finalImageUrls.push(item.url);
@@ -529,7 +566,6 @@
             const fileExt = file.name.split('.').pop() || 'jpg';
             const uniqueFileName = `product_${Date.now()}_${Math.random().toString(36).substring(2, 9)}.${fileExt}`;
 
-            // Загрузка файла в корзину product-images
             const { data: uploadData, error: uploadError } = await supabase
               .storage
               .from(STORAGE_BUCKET)
@@ -543,7 +579,6 @@
               throw new Error(`Ошибка загрузки фото: ${uploadError.message}`);
             }
 
-            // Получаем публичную ссылку
             const { data: publicUrlData } = supabase
               .storage
               .from(STORAGE_BUCKET)
@@ -557,7 +592,6 @@
 
         const primaryImageUrl = finalImageUrls[0] || "";
 
-        // Сборка объекта данных товара
         const nameVal = document.getElementById("productName").value.trim();
         const categoryVal = document.getElementById("productCategory").value;
         const priceVal = parseFloat(document.getElementById("productPrice").value) || 0;
@@ -565,14 +599,13 @@
         const colorVal = document.getElementById("productColor").value.trim();
         const descriptionVal = document.getElementById("productDescription").value.trim();
 
-        // Поля адаптированы под стандартные схемы Supabase
         const payload = {
           name: nameVal,
-          title: nameVal, // на случай, если колонка называется title
+          title: nameVal,
           category: categoryVal,
           price: priceVal,
           size: sizeVal,
-          volume: sizeVal, // на случай, если колонка называется volume
+          volume: sizeVal,
           color: colorVal,
           description: descriptionVal,
           image: primaryImageUrl,
@@ -581,38 +614,28 @@
         };
 
         if (editingId) {
-          // Режим обновления существующей карточки
           const { error: updateError } = await supabase
             .from(TABLE_NAME)
             .update(payload)
             .eq("id", editingId);
 
-          if (updateError) {
-            console.error("Ошибка при обновлении товара:", updateError);
-            throw updateError;
-          }
+          if (updateError) throw updateError;
           showToast("Товар успешно обновлен!", "success");
         } else {
-          // Режим добавления новой записи
           const { error: insertError } = await supabase
             .from(TABLE_NAME)
             .insert([payload]);
 
-          if (insertError) {
-            console.error("Ошибка при создании товара:", insertError);
-            throw insertError;
-          }
+          if (insertError) throw insertError;
           showToast("Товар успешно добавлен!", "success");
         }
 
-        // Очищаем форму и возвращаем стандартный вид
         resetFormToCreateMode();
-        // Перезагружаем список
         loadProducts();
 
       } catch (err) {
         console.error("Ошибка сохранения товара:", err);
-        showToast(err.message || "Не удалось сохранить товар. Проверьте соединение с базой.", "error");
+        showToast(err.message || "Не удалось сохранить товар", "error");
       } finally {
         submitBtn.disabled = false;
         spinner.classList.add("hidden");
@@ -621,14 +644,16 @@
       }
     }
 
-    // 5. Загрузка списка товаров из базы Supabase
+    // 5. Загрузка товаров из Supabase
     async function loadProducts() {
       const grid = document.getElementById("productsGrid");
       const loading = document.getElementById("productsLoading");
       const empty = document.getElementById("productsEmpty");
       const countBadge = document.getElementById("productsCountBadge");
 
+      loading.style.display = "block";
       loading.classList.remove("hidden");
+      empty.style.display = "none";
       empty.classList.add("hidden");
       grid.innerHTML = "";
 
@@ -638,15 +663,13 @@
           .select("*")
           .order("id", { ascending: false });
 
-        if (error) {
-          console.error("Ошибка при получении товаров:", error);
-          throw error;
-        }
+        if (error) throw error;
 
         loadedProductsList = data || [];
         countBadge.textContent = loadedProductsList.length;
 
         if (loadedProductsList.length === 0) {
+          empty.style.display = "block";
           empty.classList.remove("hidden");
         } else {
           renderProductsGrid(loadedProductsList);
@@ -659,6 +682,7 @@
           </div>
         `;
       } finally {
+        loading.style.display = "none";
         loading.classList.add("hidden");
       }
     }
@@ -675,7 +699,6 @@
         const category = product.category || "Унисекс";
         const description = product.description || "";
         
-        // Определение главного фото
         let mainImg = product.image || product.image_url;
         if (!mainImg && Array.isArray(product.images) && product.images.length > 0) {
           mainImg = product.images[0];
@@ -688,7 +711,6 @@
 
         return `
           <div class="bg-white rounded-xl border border-slate-200/80 shadow-2xs overflow-hidden flex flex-col group hover:shadow-md hover:border-slate-300 transition-all">
-            <!-- Миниатюра фото -->
             <div class="relative aspect-square bg-slate-100 overflow-hidden">
               <img 
                 src="${mainImg}" 
@@ -698,12 +720,10 @@
                 onerror="this.src='data:image/svg+xml;charset=UTF-8,%3Csvg%20width%3D%22200%22%20height%3D%22200%22%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%3E%3Crect%20width%3D%22100%25%22%20height%3D%22100%25%22%20fill%3D%22%23F1F5F9%22%2F%3E%3Ctext%20x%3D%2250%25%22%20y%3D%2250%25%22%20font-size%3D%2214%22%20fill%3D%22%2394A3B8%22%20text-anchor%3D%22middle%22%20dy%3D%22.3em%22%3E%D0%A4%D0%BE%D1%82%D0%BE%3C%2Ftext%3E%3C%2Fsvg%3E'"
               />
 
-              <!-- Категория бейдж -->
               <span class="absolute top-2 left-2 text-[10px] font-semibold tracking-wide uppercase px-2 py-0.5 rounded-md bg-white/90 backdrop-blur-xs text-slate-800 shadow-2xs">
                 ${category}
               </span>
 
-              <!-- Количество фото -->
               ${photosCount > 1 ? `
                 <span class="absolute bottom-2 right-2 text-[10px] font-medium px-1.5 py-0.5 rounded bg-slate-900/70 text-white flex items-center gap-1 backdrop-blur-xs">
                   <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
@@ -712,7 +732,6 @@
               ` : ''}
             </div>
 
-            <!-- Инфо часть -->
             <div class="p-3 sm:p-3.5 flex-1 flex flex-col justify-between">
               <div>
                 <h4 class="font-bold text-xs sm:text-sm text-slate-900 line-clamp-1 mb-1" title="${title}">
@@ -731,15 +750,14 @@
                 ` : ''}
               </div>
 
-              <!-- Цена и действия -->
               <div class="pt-2 border-t border-slate-100 flex flex-col gap-2">
                 <div class="font-bold text-sm sm:text-base text-slate-900 font-mono">
                   ${price.toLocaleString('ru-RU')} <span class="text-xs font-normal text-slate-500">сом</span>
                 </div>
 
                 <div class="grid grid-cols-2 gap-1.5">
-                  <!-- Кнопка редактирования (заполняет форму описанием и полями) -->
                   <button 
+                    type="button"
                     onclick="handleEditProduct('${product.id}')" 
                     class="py-1.5 px-2 bg-slate-100 hover:bg-indigo-50 text-slate-700 hover:text-indigo-600 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer"
                     title="Редактировать описание и параметры"
@@ -748,8 +766,8 @@
                     <span>Изм.</span>
                   </button>
 
-                  <!-- Кнопка удаления -->
                   <button 
+                    type="button"
                     onclick="handleDeleteProduct('${product.id}', '${title.replace(/'/g, "\\'")}')" 
                     class="py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg text-xs font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer"
                     title="Удалить карточку товара"
@@ -765,7 +783,7 @@
       }).join("");
     }
 
-    // 6. Редактирование карточки ранее добавленного товара
+    // 6. Редактирование существующего товара (поля и описание)
     function handleEditProduct(productId) {
       const product = loadedProductsList.find(p => String(p.id) === String(productId));
       if (!product) return;
@@ -778,7 +796,6 @@
       document.getElementById("productColor").value = product.color || "";
       document.getElementById("productDescription").value = product.description || "";
 
-      // Восстанавливаем ранее загруженные фото в превью
       selectedPhotos = [];
       const imagesList = Array.isArray(product.images) && product.images.length > 0 
         ? product.images 
@@ -795,15 +812,15 @@
 
       renderPhotoPreviews();
 
-      // Обновляем заголовок и кнопку
       document.getElementById("formTitle").innerHTML = `
         <span class="w-2.5 h-2.5 rounded-full bg-amber-500"></span>
         Редактирование: ${product.name || product.title || 'Товар'}
       `;
-      document.getElementById("cancelEditBtn").classList.remove("hidden");
+      const cancelBtn = document.getElementById("cancelEditBtn");
+      cancelBtn.style.display = "inline-block";
+      cancelBtn.classList.remove("hidden");
       document.getElementById("submitBtnText").textContent = "Сохранить изменения";
 
-      // Прокручиваем к форме
       document.getElementById("productForm").scrollIntoView({ behavior: "smooth", block: "start" });
       showToast("Режим редактирования активирован", "info");
     }
@@ -818,11 +835,13 @@
         <span class="w-2.5 h-2.5 rounded-full bg-indigo-600"></span>
         Добавление нового товара
       `;
-      document.getElementById("cancelEditBtn").classList.add("hidden");
+      const cancelBtn = document.getElementById("cancelEditBtn");
+      cancelBtn.style.display = "none";
+      cancelBtn.classList.add("hidden");
       document.getElementById("submitBtnText").textContent = "Опубликовать товар";
     }
 
-    // 7. Удаление товара из Supabase
+    // 7. Удаление товара
     async function handleDeleteProduct(productId, productTitle) {
       const confirmDelete = confirm(`Вы действительно хотите удалить товар «${productTitle}» из базы?`);
       if (!confirmDelete) return;
@@ -833,10 +852,7 @@
           .delete()
           .eq("id", productId);
 
-        if (error) {
-          console.error("Ошибка при удалении:", error);
-          throw error;
-        }
+        if (error) throw error;
 
         showToast(`Товар «${productTitle}» удален!`, "success");
         loadProducts();
@@ -846,7 +862,7 @@
       }
     }
 
-    // 8. Уведомления (Toast)
+    // 8. Всплывающее уведомление (Toast)
     let toastTimeout = null;
     function showToast(message, type = "success") {
       const toast = document.getElementById("toastNotification");
@@ -873,8 +889,12 @@
       }, 3500);
     }
 
-    // Автоматическая проверка авторизации при открытии страницы
-    window.addEventListener("DOMContentLoaded", checkAuth);
+    // Запуск проверки при открытии
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", checkAuth);
+    } else {
+      checkAuth();
+    }
   </script>
 </body>
 </html>
